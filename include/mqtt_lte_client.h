@@ -14,7 +14,7 @@ public:
     void handle();
     bool isConnected();
     void setCallback(void (*callback)(const char*, const uint8_t*, uint32_t));
-    bool publish(const char* topic, const char* payload);
+    bool publish(const char* topic, const char* payload, const uint8_t qos);
     bool subscribe(const char* topic);
 
 private:
