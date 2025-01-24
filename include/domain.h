@@ -1,16 +1,27 @@
-#include <string>
+#ifndef DOMAIN_H
+#define DOMAIN_H
+
 #include <WString.h>
 
-// Machine States
-enum MachineState {
-    STATE_FREE,
-    
-    STATE_IDLE, 
-    STATE_RUNNING,
-    STATE_PAUSED
-    // OFFLINE
+// Struct for machine configuration
+struct MachineConfig {
+    String sessionId;
+    String userId;
+    String userName;
+    int tokens;
+    String timestamp;
+    bool isLoaded;
 };
 
+// Enum for machine states
+enum MachineState {
+    STATE_FREE,
+    STATE_IDLE,
+    STATE_RUNNING,
+    STATE_PAUSED
+};
+
+// Enum for machine actions
 enum MachineAction {
     ACTION_SETUP,
     ACTION_START,
@@ -19,38 +30,17 @@ enum MachineAction {
     ACTION_RESUME
 };
 
+// Function declarations
+String getMachineActionString(MachineAction action);
+String getMachineStateString(MachineState state);
 
-String getMachineActionString(MachineAction action) {
-    switch (action) {
-        case ACTION_SETUP: return "SETUP";
-        case ACTION_START: return "START";
-        case ACTION_STOP: return "STOP";
-        case ACTION_PAUSE: return "PAUSE";
-        case ACTION_RESUME: return "RESUME";
-        default: return "START";
-    }
-}
-
-String getMachineStateString(MachineState state) {
-    switch (state) {
-        case STATE_FREE: return "FREE";
-        case STATE_IDLE: return "IDLE";
-        case STATE_RUNNING: return "RUNNING";
-        case STATE_PAUSED: return "PAUSED";
-        default: return "IDLE";
-    }
-}
-
+// Enum for trigger types
 enum TriggerType {
     MANUAL,
     AUTOMATIC
 };
 
-// enum TokenChannel {
-//     PHYSICAL,
-//     DIGITAL
-// };
-
+// Enum for machine button names
 enum MachineButtonName {
     BUTTON_1,
     BUTTON_2,
@@ -58,3 +48,5 @@ enum MachineButtonName {
     BUTTON_4,
     BUTTON_5
 };
+
+#endif // DOMAIN_H

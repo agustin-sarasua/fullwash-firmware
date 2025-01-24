@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MQTT_LTE_CLIENT_H
+#define MQTT_LTE_CLIENT_H
 
 #include "utilities.h"
 #include <TinyGsmClient.h>
@@ -32,3 +33,5 @@ private:
     uint32_t lastCheckConnect = 0;
     bool isInitialized = false;
 };
+
+#endif // MQTT_LTE_CLIENT_H
