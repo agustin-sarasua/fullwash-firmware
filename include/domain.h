@@ -10,6 +10,7 @@ struct MachineConfig {
     String userName;
     int tokens;
     String timestamp;
+    unsigned long timestampMillis;
     bool isLoaded;
 };
 

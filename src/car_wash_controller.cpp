@@ -43,6 +43,7 @@ void CarWashController::handleMqttMessage(const char* topic, const uint8_t* payl
         config.userName = doc["user_name"].as<String>();
         config.tokens = doc["tokens"].as<int>();
         config.timestamp = doc["timestamp"].as<String>();
+        config.timestampMillis = millis();
         config.isLoaded = true;
         currentState = STATE_IDLE;
         lastActionTime = millis();
@@ -53,6 +54,7 @@ void CarWashController::handleMqttMessage(const char* topic, const uint8_t* payl
         Serial.print("Updating machine configuration timestamp: ");
         Serial.println(doc["timestamp"].as<String>());
         config.timestamp = doc["timestamp"].as<String>();
+        config.timestampMillis = millis();
         config.sessionId = "";
         config.userId = "";
         config.userName = "";
@@ -157,6 +159,7 @@ void CarWashController::tokenExpired() {
     }
     activeButton = -1;
     currentState = STATE_IDLE;
+    lastActionTime = millis();
     digitalWrite(RUNNING_LED_PIN, LOW);
     // publishTokenExpiredEvent();
 }
@@ -237,7 +240,7 @@ String CarWashController::getTimestamp() {
 
     time_t serverEpoch = makeTime(tm);
 
-    unsigned long millisOffset = millis();
+    unsigned long millisOffset = millis() - config.timestampMillis;
     time_t adjustedTime = serverEpoch + (millisOffset / 1000);
     int extraMilliseconds = millisOffset % 1000;
 
