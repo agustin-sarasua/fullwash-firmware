@@ -181,9 +181,9 @@ public:
         thisModem().waitResponse(30000UL);
 
         // Print will message and topic
-        Serial.println("Will message and topic:");
-        Serial.println(will_topic);
-        Serial.println(will_msg);
+        // Serial.println("Will message and topic:");
+        // Serial.println(will_topic);
+        // Serial.println(will_msg);
         if (will_msg && will_topic) {
             if (!mqttWillTopic(clientIndex, will_topic)) {
                 return false;
@@ -235,44 +235,63 @@ public:
     bool mqtt_publish(uint8_t clientIndex, const char *topic, const char *playload,
                       uint8_t qos = 0, uint32_t timeout = 60)
     {
+        // Serial.println("MQTT Publish started...");
+
         if (clientIndex > muxCount) {
+            Serial.println("Error: Invalid client index.");
             return false;
         }
-        // +CMQTTTOPIC: (0-1),(1-1024)
-        // <client_index>,<req_length>
-        //  publish message topic
+
+        // Serial.print("Publishing topic: ");
+        // Serial.println(topic);
+        
+        // Serial.print("Publishing payload: ");
+        // Serial.println(playload);
+        
+        // Serial.print("Client index: ");
+        // Serial.println(clientIndex);
+
+        // Serial.println("Sending AT+CMQTTTOPIC...");
         thisModem().sendAT("+CMQTTTOPIC=", clientIndex, ',', strlen(topic));
         if (thisModem().waitResponse(10000UL, ">") != 1) {
+            Serial.println("Error: No response for AT+CMQTTTOPIC");
             return false;
         }
+        // Serial.println("Sending topic...");
         thisModem().stream.write(topic);
         thisModem().stream.println();
-
+        
         if (thisModem().waitResponse() != 1) {
+            Serial.println("Error: Failed after sending topic.");
             return false;
         }
 
-        // AT+CMQTTPAYLOAD Input the publish message body
-        // +CMQTTPAYLOAD: (0-1),(1-10240)
-        // <client_index>,<req_length>
+        // Serial.println("Sending AT+CMQTTPAYLOAD...");
         thisModem().sendAT("+CMQTTPAYLOAD=", clientIndex, ',', strlen(playload));
         if (thisModem().waitResponse(10000UL, ">") != 1) {
+            Serial.println("Error: No response for AT+CMQTTPAYLOAD");
             return false;
         }
+        // Serial.println("Sending payload...");
         thisModem().stream.write(playload);
         thisModem().stream.println();
-        // Wait return OK
+        
         if (thisModem().waitResponse() != 1) {
+            Serial.println("Error: Failed after sending payload.");
             return false;
         }
-        // +CMQTTPUB: (0-1),(0-2),(60-180),(0-1),(0-1)
-        // <client_index>,<qos>,<pub_timeout>,<ratained>,<dup>
+
+        // Serial.println("Sending AT+CMQTTPUB...");
         thisModem().sendAT("+CMQTTPUB=", clientIndex, ',', qos, ',', timeout);
         if (thisModem().waitResponse() != 1) {
+            Serial.println("Error: No response for AT+CMQTTPUB");
             return false;
         }
+
+        // Serial.println("MQTT Publish successful!");
         return true;
     }
+
 
     bool mqtt_subscribe(uint8_t clientIndex, const char *topic, uint8_t qos = 0)
     {

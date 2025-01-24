@@ -5,39 +5,58 @@
 
 #include "mqtt_lte_client.h"
 #include "utilities.h"
+#include <ArduinoJson.h>
+#include <TimeLib.h>
+#include <algorithm>
+#include "domain.h"
+#include "constants.h"
+#include "car_wash_controller.h"
 
+// Global instances
 MqttLteClient mqttClient;
-const char *subscribe_topic = "GsmMqttTest/subscribe";
-const char *publish_topic = "GsmMqttTest/publish";
+CarWashController* controller;
+static unsigned long lastHeapPrint = 0;
 
 void mqtt_callback(const char *topic, const uint8_t *payload, uint32_t len) {
-    Serial.println("\n======mqtt_callback======");
-    Serial.print("Topic: "); 
-    Serial.println(topic);
-    Serial.print("Payload: ");
-    for (uint32_t i = 0; i < len; ++i) {
-        Serial.print((char)payload[i]);
+    if (controller) {
+        controller->handleMqttMessage(topic, payload, len);
     }
-    Serial.println("\n=========================");
 }
 
 void setup() {
     Serial.begin(115200);
     SerialAT.begin(115200, SERIAL_8N1, MODEM_RX_PIN, MODEM_TX_PIN);
-
+    Serial.println("Starting everything");
+    
     mqttClient.begin(SerialAT);
     if (!mqttClient.connect()) {
         Serial.println("Failed to connect to MQTT broker");
         return;
     }
+
+    controller = new CarWashController(mqttClient);
     mqttClient.setCallback(mqtt_callback);
-    mqttClient.subscribe(subscribe_topic);
+    mqttClient.subscribe(INIT_TOPIC.c_str());
+    mqttClient.subscribe(CONFIG_TOPIC.c_str());
+    controller->publishMachineSetupActionEvent();
     
     Serial.println("Connected to MQTT broker");
 }
 
 void loop() {
+    // print ESP.getFreeHeap()
+    // Print heap every 10 second
+    if (millis() - lastHeapPrint > 10000) {
+        lastHeapPrint = millis();
+        Serial.print("Free Heap:");
+        Serial.println(ESP.getFreeHeap());
+    }
+
     mqttClient.handle();
+
+    if (controller) {
+        controller->update();
+    }
     
     // Debug AT commands
     if (SerialAT.available()) {

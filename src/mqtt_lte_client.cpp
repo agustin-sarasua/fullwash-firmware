@@ -1,7 +1,7 @@
 #define TINY_GSM_RX_BUFFER          1024 // Set RX buffer to 1Kb
 
 // See all AT commands, if wanted
-#define DUMP_AT_COMMANDS
+// #define DUMP_AT_COMMANDS
 
 #include "mqtt_lte_client.h"
 // #include "utilities.h"
@@ -117,19 +117,24 @@ bool MqttLteClient::connectMqtt() {
         Serial.println("Invalid MQTT broker or client ID");
         return false;
     }
+
+    if (modem->mqtt_connected()) {
+        Serial.println("MQTT already connected.");
+        return true;  // Avoid reconnecting if already connected
+    }
+
+    Serial.println("Disconnecting previous MQTT session if any...");
+    modem->sendAT("+CMQTTDISC=0");  // Ensure old session is closed
+    modem->waitResponse(5000UL);
     
-    // Serial.println("Connecting to MQTT broker");
-    // Serial.print("Broker: ");
-    // Serial.println(BROKER);
-    // Serial.print("Port: ");
-    // Serial.println(BROKER_PORT);
-    // Serial.print("Client ID: ");
-    // Serial.println(CLIENT_ID);
+    Serial.println("Connecting to MQTT broker...");
     modem->setWillMessage("GsmMqttTest/lastwill", "offline", 0);
 
     if (!modem->mqtt_connect(MQTT_CLIENT_ID, BROKER, BROKER_PORT, CLIENT_ID)) {
+        Serial.println("MQTT connection failed.");
         return false;
     }
+
     return modem->mqtt_connected();
 }
 
@@ -158,8 +163,21 @@ void MqttLteClient::setCallback(void (*callback)(const char*, const uint8_t*, ui
     modem->mqtt_set_callback(callback);
 }
 
-bool MqttLteClient::publish(const char* topic, const char* payload) {
-    return modem->mqtt_publish(MQTT_CLIENT_ID, topic, payload);
+// const char* topic, const char* payload, const uint8_t qos
+bool MqttLteClient::publish(const char* topic, const char* payload, const uint8_t qos) {
+    // Check if modem is still connected to the network
+    modem->sendAT("+CGATT?");
+    if (modem->waitResponse(5000UL) != 1) {
+        Serial.println("Error: Modem lost network connection.");
+        return false;
+    }
+  
+    Serial.print("Publishing topic: ");
+    Serial.println(topic);
+    Serial.print("Publishing payload: ");
+    Serial.println(payload);
+
+    return modem->mqtt_publish(MQTT_CLIENT_ID, topic, payload, qos);
 }
 
 bool MqttLteClient::subscribe(const char* topic) {

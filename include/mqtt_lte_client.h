@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MQTT_LTE_CLIENT_H
+#define MQTT_LTE_CLIENT_H
 
 #include "utilities.h"
 #include <TinyGsmClient.h>
@@ -14,7 +15,7 @@ public:
     void handle();
     bool isConnected();
     void setCallback(void (*callback)(const char*, const uint8_t*, uint32_t));
-    bool publish(const char* topic, const char* payload);
+    bool publish(const char* topic, const char* payload, const uint8_t qos);
     bool subscribe(const char* topic);
 
 private:
@@ -32,3 +33,5 @@ private:
     uint32_t lastCheckConnect = 0;
     bool isInitialized = false;
 };
+
+#endif // MQTT_LTE_CLIENT_H
